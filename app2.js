@@ -19,7 +19,8 @@ const users = [
   },
 ];
 
-const posts = [
+let posts = [
+  // 아래 5번에서 posts 값 재설정 필요 따라서 let으로 변경
   {
     id: 1,
     title: "간단한 HTTP API 개발 시작!",
@@ -43,10 +44,7 @@ app.get("/", (req, res) => {
 
 // 1. 회원가입하기
 app.post("/signup", (req, res) => {
-  req.body.name;
-  req.body.email;
-  req.body.password;
-
+  const lastUsers = users[users.length - 1];
   if (lastUsers) {
     users.push({
       id: users[users.length - 1].id,
@@ -78,7 +76,7 @@ app.post("/createPost", (req, res) => {
 });
 
 app.get("/posts", (req, res) => {
-  const postWithUserName = posts.map((post) => {
+  let postWithUserName = posts.map((post) => {
     //users 안에있는 아이디랑 post.userId랑 같은 애를 찾아서 넣어줌.
     const user = users.find((user) => post.userId === user.id);
 
@@ -108,6 +106,44 @@ app.patch("/post", (req, res) => {
   };
   res.json({ data: newPost });
 });
+
+//5. 삭제하기
+app.delete("/post", (req, res) => {
+  let { id } = req.query; //구조분해 할당
+  // console.log(id) 하단에 1 가지고 오는지 확인
+
+  const newId = Number(id);
+  const result = posts.filter((post) => post.id !== newId); //여기서 string 으로 들어가기 때문에 위에 넘버로 바꿔줌.
+  posts = result;
+  res.json({ data: posts });
+});
+
+// 6. 유저와 게시글 조회하기
+app.get("/total", (req, res) => {
+  const userId = Number(req.query.userId);
+  const userInfo = users.find((user) => user.id === userId);
+  const postings = posts.filter((post) => post.userId === userId);
+
+  let newPostings = [];
+
+  postings.forEach((post) => {
+    let temp = {
+      postingId: post.id,
+      postingName: post.title,
+      postingContent: post.content,
+    };
+    newPostings.push(temp);
+  });
+
+  const newPost = {
+    userId,
+    userName: userInfo.name,
+    postings: newPostings,
+  };
+
+  res.json({ data: newPost });
+});
+
 const server = http.createServer(app);
 
 server.listen(8000, () => {
